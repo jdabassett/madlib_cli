@@ -98,20 +98,20 @@ def print_message(str_par: str):
     """
     print(str_par)
 
+def make_list_of_files_available(str_path_par:str):
+    list_text_files = sorted([i.split("_")[1] for i in os.listdir(str_path_par) if i.count("raw")])
+    str_text_files = ", ".join([f'{value}({index + 1})' for index, value in enumerate(list_text_files)])
+    return str_text_files, list_text_files
+
 
 if __name__ == "__main__":
-    # dict_argv={index:value for index,value in enumerate(sys.argv)}
-    # if 1 not in dict_argv and dict_argv[1].find("raw")!=-1:
-    #     print("Must provide raw text file to be imported and parsed. ie...'python madlib.py texts/raw_short_game.txt'")
-    # else:
-
-    #print message describing the game
     print_message(str_madlib_description)
 
-    list_text_files=sorted([i.split("_")[1] for i in os.listdir(str_path_text) if i.count("raw")])
-    str_text_files=", ".join([f'{value}({index+1})' for index,value in enumerate(list_text_files)])
+    #final all the file names that can be used as games
+    str_text_files, list_text_files =make_list_of_files_available(str_path_text)
 
-    str_enter_input=input("\n\nType any key and press enter to start: ")
+    #before jumping into the game
+    str_enter_input =input("\n\nType any key and press enter to start: ")
 
     #the game lives in here and they can play as long as they don't type 'quit' into a prompt
     while not bool_quit_game:
@@ -130,8 +130,11 @@ if __name__ == "__main__":
             else:
                 str_path_file=list_text_files[int(str_path_input)-1]
         else:
-            print_message("I didn't get that. Please try again.\n")
+            print_message("\n\nI didn't get that. Please try again.\n")
             continue
+
+        #print script they have chosen
+        print_message(f"\n\nYou chose '{str_path_file}'.")
 
         # open the raw file that will be used this round of the game
         with open(f'./texts/raw_{str_path_file}_game.txt', 'r') as raw:
@@ -140,10 +143,10 @@ if __name__ == "__main__":
             list_inputs = prompts(list_prompts)
             str_raw = "".join(list_raw)
             str_final = format_str(str_raw, list_inputs)
-            print_message(str_final)
+            print_message(f'\n\n{str_final}')
 
         #allow user to save results in file
-        str_save_output=input("\n\nWould you like to save this script(Y/N): ").lower()
+        str_save_output=input("\n\nWould you like to save this script(y/n): ").lower()
         if str_save_output=="y":
             count=0
             while count<5:
@@ -158,6 +161,8 @@ if __name__ == "__main__":
                     str_filename_continue=input("\n\nSorry that filename won't work.\n\nType any key to try again or 'cancel' to cancel saving file: ")
                     if str_filename_continue=='cancel':
                         count=5
+        else:
+            print_message("\n\nOkay, won't save this one.")
 
         #ask if they wish to keep playing
         str_keep_playing=input("\n\nWould you like to keep playing? Type any key to continue or 'quit' to stop: ")
