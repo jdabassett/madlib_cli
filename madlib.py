@@ -62,7 +62,7 @@ def parse_template(str_raw: str):
     return str_raw_return, list_variables
 
 
-def prompts(list_par: list[str], bool_quit_game_par:bool):
+def prompts(list_par: list[str]):
     '''
     Input a list of strings into this function. It will iterate over the list prompting the user for input that will be returned as a separate list of strings.
     :param list_par is a list of strings used to prompt the user and boolean of whether to continue game:
@@ -71,20 +71,19 @@ def prompts(list_par: list[str], bool_quit_game_par:bool):
     int_len = len(list_par)
     if int_len == 0:
         print("\nTest inside 'raw.txt' file isn't properly formatted.")
-        return [], bool_quit_game_par
+        return [], False
 
     list_inputs = []
     count = 0
 
     while count < int_len:
-        str_input = input(f'\nEnter a {list_par[count]}: ')
-        if str_input==("quit"):
-            bool_quit_gam_par=True
-            break
+        str_input = input(f'\nEnter {list_par[count]}: ')
+        if str_input=="quit":
+            return [], True
         list_inputs.append(str_input)
         count += 1
 
-    return list_inputs, bool_quit_game_par
+    return list_inputs, False
 
 
 def merge(str_par_raw: str, list_par_input: list[str]) -> str:
@@ -124,18 +123,45 @@ def make_list_of_files_available(str_path_par:str):
     str_text_files = "\n".join([f'({index + 1}) {value}' for index, value in enumerate(list_text_files)])
     return str_text_files, list_text_files
 
+def save_script(str_final:str):
+    # allow user to save results in file
+    str_save_output = input("\nWould you like to save this script(y/n): ").lower()
+    if str_save_output == "y":
+        count = 0
+        while count < 5:
+            str_filename = input(
+                "\nWhat should we label the file.\nNames can only be a-z, A-Z, and 0-9 without spaces.\nAnd must be less than 20 characters long: ")
+            if str_filename.isalnum() and len(str_filename) < 21:
+                with open(f'./assets/fin_{str_filename}.text', 'w') as output:
+                    output.write(str_final)
+                    print_message(f'\nfin_{str_filename}.txt successfully saved!')
+                count = 5
+            else:
+                count += 1
+                str_filename_continue = input(
+                    "\nSorry that filename won't work.\nType any key to try again or 'cancel' to cancel saving file: ")
+                if str_filename_continue == 'cancel':
+                    count = 5
+    else:
+        print_message("\nOkay, won't save this one.")
 
-if __name__ == "__main__":
-    print_message(str_madlib_description)
+def keep_playing()->bool:
+    # ask if they wish to keep playing
+    str_keep_playing = input("\nWould you like to keep playing? Type any key to continue or 'quit' to stop: ")
+    if str_keep_playing == "quit":
+        return True
+    else:
+        return False
 
-    #final all the file names that can be used as games
-    str_text_files, list_text_files =make_list_of_files_available(str_path_text)
-
-    #before jumping into the game
-    str_enter_input =input("\nType any key and press enter to start: ")
-
+def main(str_text_files:str,list_text_files:list[str]):
+    """
+    the brains of the game live here
+    :param str_text_files:
+    :param list_text_files:
+    :return:
+    """
     #the game lives in here and they can play as long as they don't type 'quit' into a prompt
-    while not bool_quit_game:
+    while True:
 
         #print all script options for them to chose from
         print_message(f'\n{str_text_files}')
@@ -143,7 +169,7 @@ if __name__ == "__main__":
 
         #parse user input into correct string to formate file path
         if str_path_input=="quit":
-            bool_quit_game=True
+            print_message(str_thank)
             break
         elif str_text_files.count(str_path_input)>0:
             if list_text_files.count(str_path_input)>0:
@@ -159,36 +185,36 @@ if __name__ == "__main__":
 
         # open the raw file that will be used this round of the game
         with open(f'./assets/{str_path_file.replace(" ","_")}_template.txt', 'r') as raw:
-            # list_raw = "\n\n".join(raw.read().split("\n\n"))
             str_raw, list_prompts = parse_template(raw.read())
-            list_inputs, bool_quit_game = prompts(list_prompts,bool_quit_game)
-            str_final = merge(str_raw, list_inputs)
-            print_message(f'\n\n{str_final}')
+            list_inputs, bool_prompts_quit = prompts(list_prompts)
+            #quit game if false
+            if bool_prompts_quit:
+                break
+            else:
+                str_final = merge(str_raw, list_inputs)
+                print_message(f'\n\nHere is your story: {str_final}')
 
-        #allow user to save results in file
-        str_save_output=input("\nWould you like to save this script(y/n): ").lower()
-        if str_save_output=="y":
-            count=0
-            while count<5:
-                str_filename=input("\nWhat should we label the file.\nNames can only be a-z, A-Z, and 0-9 without spaces.\nAnd must be less than 20 characters long: ")
-                if str_filename.isalnum() and len(str_filename)<21:
-                    with open(f'./assets/fin_{str_filename}.text','w') as output:
-                        output.write(str_final)
-                        print_message(f'\n{str_filename}.txt successfully saved!')
-                    count=5
-                else:
-                    count+=1
-                    str_filename_continue=input("\nSorry that filename won't work.\nType any key to try again or 'cancel' to cancel saving file: ")
-                    if str_filename_continue=='cancel':
-                        count=5
-        else:
-            print_message("\nOkay, won't save this one.")
+        save_script(str_final)
 
-        #ask if they wish to keep playing
-        str_keep_playing=input("\nWould you like to keep playing? Type any key to continue or 'quit' to stop: ")
-        if str_keep_playing=="quit":
-            bool_quit_game=True
+        bool_end_quit=keep_playing()
+        if bool_end_quit:
             break
+
+
+if __name__ == "__main__":
+    print_message(str_madlib_description)
+
+    #final all the file names that can be used as games
+    str_text_files, list_text_files =make_list_of_files_available(str_path_text)
+
+    #before jumping into the game
+    str_enter_input =input("\nType any key and press enter to start: ")
+    # quit game if false
+    if str_enter_input=="quit":
+            bool_quit_game=True
+
+    #brains of the game live here
+    main(str_text_files,list_text_files)
 
     #thank them for playing the game
     print_message(str_thank)
